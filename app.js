@@ -1,82 +1,100 @@
-// Define UI Vars
 const form = document.querySelector('#task-form');
 const taskList = document.querySelector('.collection');
 const clearBtn = document.querySelector('.clear-tasks');
 const filter = document.querySelector('#filter');
 const taskInput = document.querySelector('#task');
 
-// Load all event listeners
 loadEventListeners();
 
 function loadEventListeners() {
-  // Add task event
+  document.addEventListener('DOMContentLoaded', getTasks);
   form.addEventListener('submit', addTask);
-  // Remove task event
   taskList.addEventListener('click', removeTask);
-  // Clear task event
   clearBtn.addEventListener('click', clearTasks);
-  // Filter tasks event
   filter.addEventListener('keyup', filterTasks);
 }
 
-// Add task
+function getTasks() {
+  let tasks = getTasksFromLocalStorage();
+  console.log(tasks);
+  
+  tasks.forEach(task => {
+    appendTask(task);
+  });
+}
+
+function getTasksFromLocalStorage() {
+  if (localStorage.getItem('tasks') === null) {
+    return [];
+  } else {
+    return JSON.parse(localStorage.getItem('tasks'));
+  }
+}
+
+function appendTask(task) {
+  taskValue = task || taskInput.value
+  const li = document.createElement('li');
+  const link = document.createElement('a');
+  li.className = 'collection-item';
+  li.appendChild(document.createTextNode(taskValue));
+  link.className = 'delete-item secondary-content';
+  link.innerHTML = '<i class="fas fa-times"></i>'
+
+  li.appendChild(link);
+  taskList.appendChild(li);
+}
+
 function addTask(e) {
   if (taskInput.value === '') {
     alert('Add a task');
   } else {
-    // Create li element
-    const li = document.createElement('li');
-    // Add class
-    li.className = 'collection-item';
-    // Create text node and append to li
-    li.appendChild(document.createTextNode(taskInput.value));
-
-    // Create new link element
-    const link = document.createElement('a');
-    // Add class
-    link.className = 'delete-item secondary-content';
-    // Add icon html
-    link.innerHTML = '<i class="fas fa-times"></i>'
-    // Append link to li
-    li.appendChild(link);
-    console.log(li);
-    
-
-    // Append li to ul
-    taskList.appendChild(li);
-
-    // Clear input
+    appendTask();
+    storeTaskInLocalStorage(taskInput.value);
     taskInput.value = '';
   }
 
   e.preventDefault();
 }
 
-// Remove task
+function storeTaskInLocalStorage(task) {
+  let tasks = getTasksFromLocalStorage();
+
+  tasks.push(task);
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+
 function removeTask(e) {
   if (e.target.parentElement.classList.contains('delete-item')) {
     if (confirm('Are you sure?')) {
       e.target.parentElement.parentElement.remove();
+      removeTaskFromLocalStorage(e.target.parentElement.parentElement);
     }
   }
 }
 
-// Clear tasks
-function clearTasks() {
-  // This is slower than remove child
-  // taskList.innerHTML = '';
+function removeTaskFromLocalStorage(taskItem) {
+  let task = getTasksFromLocalStorage();
 
-  // Faster
+
+  tasks.forEach((task, index) => {
+    if(taskItem.textContent === task) {
+      tasks.splice(index, 1);
+    }
+  });
+
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+}
+
+function clearTasks() {
+  localStorage.clear();
+  
   while(taskList.firstChild) {
     taskList.removeChild(taskList.firstChild);
   }
 }
 
-// Filter tasks
 function filterTasks(e) {
   const text = e.target.value.toLowerCase();
-
-  // Iterable because qeurySelector returns node list
   document.querySelectorAll('.collection-item').forEach(task => {
     const item = task.firstChild.textContent;
     
